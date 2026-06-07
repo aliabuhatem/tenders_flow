@@ -1,0 +1,726 @@
+{% extends "base.html" %}
+{% block title %}{{ tender.reference_no }} — TenderFlow{% endblock %}
+{% block page_title %}{{ tender.reference_no }}{% endblock %}
+{% block page_subtitle %}{{ tender.client_name }} · {{ tender.title }}{% endblock %}
+
+{% block header_actions %}
+<a href="/export/tenders/{{ tender.id }}" class="btn-secondary inline-flex items-center gap-2 h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+  Export PDF
+</a>
+<a href="/dashboard" class="btn-secondary inline-flex items-center gap-2 h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+  Dashboard
+</a>
+{% endblock %}
+
+{% block content %}
+<div x-data="cloudBrowser({{ tender.id }}, {{ {'zoho': cloud_status.zoho, 'onedrive': cloud_status.onedrive} | tojson }})">
+{% set days_left = (tender.submission_deadline - now).days %}
+{% set is_overdue = days_left < 0 and tender.status.value not in ['submitted','won','lost','cancelled'] %}
+
+<!-- ── Header Card ── -->
+<div class="card p-6 mb-6">
+  <div class="flex flex-wrap items-start gap-6">
+    <!-- Info -->
+    <div class="flex-1 min-w-64">
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        <span class="text-xs font-mono font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
+          {{ tender.reference_no }}
+        </span>
+        <span class="text-xs px-2 py-1 rounded-full font-medium badge-{{ tender.status.value }}">
+          {{ tender.status.value.title() }}
+        </span>
+        <span class="text-xs px-2 py-1 rounded-full font-medium badge-{{ tender.priority.value }}">
+          {{ tender.priority.value.title() }} Priority
+        </span>
+        <span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">
+          {{ tender.tender_type.value.replace('_', ' ').title() }}
+        </span>
+      </div>
+      <h2 class="text-xl font-bold text-slate-900 mb-1">{{ tender.title }}</h2>
+      <p class="text-slate-500">{{ tender.client_name }}
+        {% if tender.client_contact %} · {{ tender.client_contact }}{% endif %}
+      </p>
+      {% if tender.description %}
+      <p class="text-sm text-slate-600 mt-2">{{ tender.description }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Key Dates & Completion -->
+    <div class="grid grid-cols-2 gap-4 text-center">
+      <div class="bg-slate-50 rounded-xl p-4 min-w-32">
+        <p class="text-xs text-slate-500 mb-1">Overall Progress</p>
+        <p class="text-3xl font-bold {% if tender.overall_completion >= 100 %}text-green-600{% elif tender.overall_completion >= 60 %}text-blue-600{% else %}text-indigo-600{% endif %}">
+          {{ tender.overall_completion | round | int }}%
+        </p>
+      </div>
+      <div class="bg-slate-50 rounded-xl p-4 min-w-32 {% if is_overdue %}bg-red-50{% elif days_left <= 3 %}bg-amber-50{% endif %}">
+        <p class="text-xs text-slate-500 mb-1">Deadline</p>
+        <p class="text-sm font-bold {% if is_overdue %}text-red-600{% elif days_left <= 3 %}text-amber-600{% else %}text-slate-800{% endif %}">
+          {{ tender.submission_deadline.strftime("%d %b %Y") }}
+        </p>
+        <p class="text-xs {% if is_overdue %}text-red-500 font-bold{% elif days_left <= 3 %}text-amber-500{% else %}text-slate-400{% endif %}"
+           data-deadline="{{ tender.submission_deadline.isoformat() }}">
+          {{ days_left }}d
+        </p>
+      </div>
+      {% if tender.estimated_value %}
+      <div class="bg-slate-50 rounded-xl p-4 col-span-2">
+        <p class="text-xs text-slate-500 mb-1">Estimated Value</p>
+        <p class="text-sm font-bold text-slate-800">{{ tender.currency }} {{ "{:,.0f}".format(tender.estimated_value) }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Overall progress bar -->
+  <div class="mt-5">
+    <div class="flex justify-between text-xs text-slate-500 mb-1.5">
+      <span>Overall completion</span>
+      <span>{{ tender.overall_completion | round | int }}%</span>
+    </div>
+    <div class="progress-bar h-3">
+      <div class="progress-fill {% if tender.overall_completion >= 100 %}bg-green-500{% else %}bg-indigo-500{% endif %}"
+           style="width:{{ tender.overall_completion }}%"></div>
+    </div>
+  </div>
+
+  <!-- Status changer -->
+  {% if user.role.value in ['admin', 'bid_manager'] %}
+  <div class="mt-5 flex flex-wrap items-center gap-3">
+    <span class="text-sm font-medium text-slate-600">Change status:</span>
+    <form method="POST" action="/tenders/{{ tender.id }}/status" class="flex flex-wrap gap-2">
+      {% for st in ['draft','active','submitted','won','lost','cancelled'] %}
+      {% if st != tender.status.value %}
+      <button type="submit" name="new_status" value="{{ st }}"
+              class="text-xs px-3 py-1.5 rounded-full border font-medium transition-colors
+                     badge-{{ st }} hover:opacity-80">
+        → {{ st.title() }}
+      </button>
+      {% endif %}
+      {% endfor %}
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Stages ── -->
+<div class="space-y-4 mb-6" x-data="{ openStage: null }">
+  <div class="flex items-center justify-between">
+    <h3 class="text-slate-900 font-semibold text-base">Proposal Stages</h3>
+    <p class="text-sm text-slate-500">
+      {{ tender.stages | selectattr('is_enabled') | selectattr('completion_pct', 'ge', 100) | list | length }}
+      of
+      {{ tender.stages | selectattr('is_enabled') | list | length }}
+      stages complete
+    </p>
+  </div>
+
+  {% for stage in tender.stages %}
+  {% set stage_days = (stage.due_date - now).days if stage.due_date else None %}
+  {% set stage_overdue = stage_days is not none and stage_days < 0 and stage.completion_pct < 100 %}
+
+  <div class="card overflow-hidden {% if not stage.is_enabled %}opacity-60{% endif %}">
+    <!-- Stage header (clickable) -->
+    <div class="p-5 cursor-pointer hover:bg-slate-50 transition-colors"
+         @click="openStage = openStage === {{ stage.id }} ? null : {{ stage.id }}">
+      <div class="flex items-center gap-4">
+
+        <!-- Stage number & icon -->
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-lg
+                    {% if not stage.is_enabled %}bg-slate-100
+                    {% elif stage.completion_pct >= 100 %}bg-green-100
+                    {% elif stage.completion_pct > 0 %}bg-blue-100
+                    {% else %}bg-slate-100{% endif %}">
+          {% if stage.completion_pct >= 100 and stage.is_enabled %}✅
+          {% elif not stage.is_enabled %}⊘
+          {% else %}{{ stage.icon }}{% endif %}
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="font-semibold text-slate-900">{{ stage.name }}</span>
+            {% if not stage.is_enabled %}
+            <span class="text-xs bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">Skipped</span>
+            {% else %}
+            <span class="text-xs px-2 py-0.5 rounded-full badge-{{ stage.priority.value }}">
+              {{ stage.priority.value.title() }}
+            </span>
+            {% if stage_overdue %}
+            <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">OVERDUE</span>
+            {% elif stage_days is not none and stage_days <= 2 %}
+            <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Due soon</span>
+            {% endif %}
+            {% endif %}
+          </div>
+
+          <div class="flex items-center gap-4 text-sm text-slate-500">
+            {% if stage.assigned_to %}
+            <span>👤 {{ stage.assigned_to.full_name }}</span>
+            {% endif %}
+            {% if stage.due_date and stage.is_enabled %}
+            <span class="{% if stage_overdue %}text-red-500{% elif stage_days <= 2 %}text-amber-500{% endif %}"
+                  data-deadline="{{ stage.due_date.isoformat() }}">
+              {{ stage.due_date.strftime("%d %b") }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="text-right hidden sm:block">
+            <p class="text-lg font-bold text-slate-900">{{ stage.completion_pct | round | int }}%</p>
+            <p class="text-xs text-slate-400">complete</p>
+          </div>
+          <div class="w-24 hidden sm:block">
+            <div class="progress-bar">
+              <div class="progress-fill {% if stage.completion_pct >= 100 %}bg-green-500{% else %}bg-indigo-500{% endif %}"
+                   style="width:{{ stage.completion_pct if stage.is_enabled else 0 }}%"></div>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-slate-400 transition-transform duration-200"
+               :class="openStage === {{ stage.id }} ? 'rotate-180' : ''"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expanded stage edit form -->
+    <div x-show="openStage === {{ stage.id }}" x-transition class="border-t border-slate-100">
+      <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/update"
+            class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Toggle enabled -->
+        <div class="md:col-span-2 flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+          <input type="checkbox" name="is_enabled" id="enabled_{{ stage.id }}"
+                 {% if stage.is_enabled %}checked{% endif %}
+                 class="rounded text-indigo-600"/>
+          <label for="enabled_{{ stage.id }}" class="text-sm font-medium text-slate-700">
+            Stage is active (uncheck to skip/disable this stage)
+          </label>
+        </div>
+
+        <!-- Completion slider -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-slate-700 mb-2">
+            Completion: <span id="pct_{{ stage.id }}_display">{{ stage.completion_pct | round | int }}</span>%
+          </label>
+          <input type="range" name="completion_pct" min="0" max="100" step="5"
+                 value="{{ stage.completion_pct | round | int }}"
+                 class="w-full"
+                 oninput="document.getElementById('pct_{{ stage.id }}_display').textContent = this.value"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Priority</label>
+          <select name="priority" class="form-input text-sm">
+            {% for p in ['high','medium','low'] %}
+            <option value="{{ p }}" {% if stage.priority.value == p %}selected{% endif %}>{{ p.title() }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Assigned to</label>
+          <select name="assigned_to_id" class="form-input text-sm">
+            <option value="">— Unassigned —</option>
+            {% for u in users %}
+            <option value="{{ u.id }}" {% if stage.assigned_to_id == u.id %}selected{% endif %}>{{ u.full_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Due date</label>
+          <input type="datetime-local" name="due_date"
+                 value="{{ stage.due_date.strftime('%Y-%m-%dT%H:%M') if stage.due_date else '' }}"
+                 class="form-input text-sm"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Notes</label>
+          <input type="text" name="notes" value="{{ stage.notes or '' }}"
+                 placeholder="Optional stage notes" class="form-input text-sm"/>
+        </div>
+
+        <div class="md:col-span-2 flex justify-end">
+          <button type="submit" class="btn-primary h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Save Stage</button>
+        </div>
+      </form>
+
+      <!-- Stage documents subsection -->
+      <div class="border-t border-slate-100 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-sm font-semibold text-slate-700">Documents</h4>
+          <button type="button" @click="openModal({{ stage.id }})"
+                  class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded px-1 py-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/></svg>
+            Attach from Cloud
+          </button>
+        </div>
+        {% set docs = stage_docs.get(stage.id, []) %}
+        {% if docs %}
+        <ul class="space-y-2">
+          {% for d in docs %}
+          <li class="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2">
+            <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                         {% if d.provider.value == 'zoho' %}bg-blue-50 text-blue-600{% else %}bg-indigo-50 text-indigo-600{% endif %}">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+            </span>
+            <div class="flex-1 min-w-0">
+              {% if d.file_url %}<a href="{{ d.file_url }}" target="_blank" rel="noopener" class="text-sm font-medium text-slate-800 hover:text-indigo-700 truncate block transition-colors duration-150">{{ d.file_name }}</a>
+              {% else %}<span class="text-sm font-medium text-slate-800 truncate block">{{ d.file_name }}</span>{% endif %}
+              <span class="text-xs text-slate-500">{{ d.provider.value.title() }} · {{ d.size_human }}</span>
+            </div>
+            <button type="button" @click="detach({{ d.id }}, $event)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500" aria-label="Remove document">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-slate-500 italic">No documents attached to this stage.</p>
+        {% endif %}
+      </div>
+
+      <!-- Tasks subsection -->
+      <div class="border-t border-slate-100 p-5">
+        <h4 class="text-sm font-semibold text-slate-700 mb-3">
+          Tasks <span class="text-slate-400 font-normal">({{ stage.tasks | selectattr('is_enabled') | list | length }} active)</span>
+        </h4>
+
+        {% if stage.tasks %}
+        <div class="space-y-2 mb-4">
+          {% for task in stage.tasks if task.is_enabled %}
+          <div class="flex items-center gap-3 bg-slate-50 rounded-lg px-3 py-2">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-slate-800 truncate">{{ task.title }}</span>
+                <span class="text-xs badge-{{ task.priority.value }} px-1.5 py-0.5 rounded">{{ task.priority.value }}</span>
+              </div>
+              {% if task.assigned_to %}
+              <p class="text-xs text-slate-400 mt-0.5">{{ task.assigned_to.full_name }}</p>
+              {% endif %}
+            </div>
+            <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/tasks/{{ task.id }}/update"
+                  class="flex items-center gap-2">
+              <span class="text-xs text-slate-500 w-8 text-right">{{ task.completion_pct | round | int }}%</span>
+              <input type="range" name="completion_pct" min="0" max="100" step="10"
+                     value="{{ task.completion_pct | round | int }}"
+                     class="w-20"
+                     onchange="this.form.submit()"/>
+              <input type="hidden" name="is_enabled" value="on"/>
+            </form>
+          </div>
+          {% else %}
+          <p class="text-sm text-slate-400 italic">No tasks yet.</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Add task form -->
+        <details class="group">
+          <summary class="text-sm text-indigo-600 font-medium cursor-pointer hover:text-indigo-800 list-none flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add task
+          </summary>
+          <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/tasks/add"
+                class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg">
+            <div class="sm:col-span-2">
+              <input type="text" name="title" required placeholder="Task title" class="form-input text-sm"/>
+            </div>
+            <div>
+              <select name="assigned_to_id" class="form-input text-sm">
+                <option value="">— Unassigned —</option>
+                {% for u in users %}
+                <option value="{{ u.id }}">{{ u.full_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <select name="priority" class="form-input text-sm">
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+                <option value="low">Low Priority</option>
+              </select>
+            </div>
+            <div>
+              <input type="datetime-local" name="due_date" class="form-input text-sm"/>
+            </div>
+            <div class="flex items-end">
+              <button type="submit" class="btn-primary w-full">Add Task</button>
+            </div>
+          </form>
+        </details>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ── Audit Log ── -->
+{% if audit_logs %}
+<div class="card p-5">
+  <h3 class="text-slate-900 font-semibold text-base mb-4">Activity Log</h3>
+  <div class="space-y-3">
+    {% for log in audit_logs %}
+    <div class="flex items-start gap-3 text-sm">
+      <div class="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-xs font-bold text-slate-600 flex-shrink-0">
+        {{ log.user.initials if log.user else '?' }}
+      </div>
+      <div class="flex-1">
+        <span class="font-medium text-slate-700">{{ log.user.full_name if log.user else 'System' }}</span>
+        <span class="text-slate-500 mx-1">performed</span>
+        <span class="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">{{ log.action }}</span>
+        {% if log.new_values %}
+        <span class="text-slate-500 ml-1">→ {{ log.new_values | string | truncate(60) }}</span>
+        {% endif %}
+      </div>
+      <time class="text-xs text-slate-400 flex-shrink-0">{{ log.created_at.strftime("%d %b %H:%M") }}</time>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Documents (tender-level) ── -->
+<div class="card p-5 mt-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h3 class="text-slate-900 font-semibold text-base">Documents</h3>
+      <p class="text-sm text-slate-600">Cloud files linked to this tender</p>
+    </div>
+    <button type="button" @click="openModal(null)"
+            class="btn-primary inline-flex items-center gap-2 h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/></svg>
+      Attach from Cloud
+    </button>
+  </div>
+
+  {% if tender_docs %}
+  <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    {% for d in tender_docs %}
+    <li class="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2.5">
+      <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0
+                   {% if d.provider.value == 'zoho' %}bg-blue-50 text-blue-600{% else %}bg-indigo-50 text-indigo-600{% endif %}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+      </span>
+      <div class="flex-1 min-w-0">
+        {% if d.file_url %}<a href="{{ d.file_url }}" target="_blank" rel="noopener" class="text-sm font-medium text-slate-800 hover:text-indigo-700 truncate block transition-colors duration-150">{{ d.file_name }}</a>
+        {% else %}<span class="text-sm font-medium text-slate-800 truncate block">{{ d.file_name }}</span>{% endif %}
+        <span class="text-xs text-slate-500">{{ d.provider.value.title() }} · {{ d.size_human }} · {{ d.created_at.strftime("%d %b") }}</span>
+      </div>
+      <button type="button" @click="detach({{ d.id }}, $event)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500" aria-label="Remove document">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="rounded-lg border border-dashed border-slate-200 px-6 py-10 text-center">
+    <svg class="w-10 h-10 mx-auto text-slate-300 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"/></svg>
+    <p class="text-sm text-slate-600">No documents yet. Attach files from Zoho WorkDrive or OneDrive.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Cloud file browser modal ── -->
+{#
+  Cloud file browser modal temporarily disabled per user request.
+  Uncomment to re-enable.
+
+<div x-data="cloudBrowser({{ tender.id }}, {{ {'zoho': cloud_status.zoho, 'onedrive': cloud_status.onedrive} | tojson }})">
+  <div
+    x-show="open"
+
+    x-cloak
+    @keydown.escape.window="close()"
+    x-effect="document.body.style.overflow = open ? 'hidden' : ''"
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="cloud-modal-title"
+  >
+    <!-- Backdrop (click to close) -->
+    <div
+      x-show="open"
+      x-transition.opacity
+      class="absolute inset-0 bg-slate-900/50"
+      @click="close()"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Dialog panel (click inside does NOT close) -->
+    <div
+      x-show="open"
+      class="relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl bg-white shadow-2xl"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 scale-95"
+      x-transition:enter-end="opacity-100 scale-100"
+      @click.stop.prevent
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <h2 id="cloud-modal-title" class="text-base font-semibold text-slate-900">Attach files from cloud</h2>
+        <button
+          type="button"
+          @click="close()"
+          class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          aria-label="Close"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Provider tabs -->
+      <div class="flex items-center gap-1 px-6 pt-4">
+        <template x-for="p in ['zoho','onedrive']" :key="p">
+          <button
+            type="button"
+            @click="switchProvider(p)"
+            class="px-4 h-10 rounded-t-lg text-sm font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            :class="provider === p ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'"
+          >
+            <span x-text="p === 'zoho' ? 'Zoho WorkDrive' : 'OneDrive'"></span>
+            <span x-show="!connected[p]" class="ml-1.5 text-xs text-slate-400">(not connected)</span>
+          </button>
+        </template>
+      </div>
+      <div class="border-b border-slate-200"></div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto px-6 py-4 min-h-[280px]">
+        <!-- Not connected state -->
+        <template x-if="!connected[provider]">
+          <div class="flex flex-col items-center justify-center py-16 text-center">
+            <span class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+              <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 0 0 4.5 4.5H18a3.75 3.75 0 0 0 1.332-7.257 3 3 0 0 0-3.758-3.848 5.25 5.25 0 0 0-10.233 2.33A4.502 4.502 0 0 0 2.25 15Z"/>
+              </svg>
+            </span>
+            <p class="text-sm font-medium text-slate-700 mb-1" x-text="(provider === 'zoho' ? 'Zoho WorkDrive' : 'OneDrive') + ' is not connected'"></p>
+            <p class="text-xs text-slate-500 mb-5">Connect your account to browse and attach files.</p>
+            <a :href="'/cloud/' + provider + '/connect'" class="btn-primary inline-flex items-center gap-2 h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/>
+              </svg>
+              <span x-text="'Connect ' + (provider === 'zoho' ? 'Zoho WorkDrive' : 'OneDrive')"></span>
+            </a>
+          </div>
+        </template>
+
+        <!-- Connected -->
+        <template x-if="connected[provider]">
+          <div>
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-1 text-sm mb-3 flex-wrap" aria-label="Breadcrumb">
+              <template x-for="(crumb, idx) in breadcrumbs" :key="idx">
+                <span class="flex items-center gap-1">
+                  <button type="button" @click="breadcrumbTo(idx)" class="text-slate-500 hover:text-indigo-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-1" x-text="crumb.name"></button>
+                  <svg x-show="idx < breadcrumbs.length - 1" class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+                </span>
+              </template>
+            </nav>
+
+            <!-- Loading skeleton -->
+            <template x-if="loading">
+              <div class="space-y-2">
+                <template x-for="i in 6" :key="i">
+                  <div class="flex items-center gap-3 px-3 py-2.5 animate-pulse">
+                    <div class="w-8 h-8 rounded-lg bg-slate-200"></div>
+                    <div class="h-3 bg-slate-200 rounded w-1/3"></div>
+                    <div class="ml-auto h-3 bg-slate-100 rounded w-16"></div>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- Error -->
+            <template x-if="!loading && error">
+              <div class="flex flex-col items-center justify-center py-12 text-center">
+                <svg class="w-10 h-10 text-red-400 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                <p class="text-sm text-slate-700 mb-3" x-text="error"></p>
+                <button type="button" @click="load(currentFolderId())" class="btn-secondary h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Retry</button>
+              </div>
+            </template>
+
+            <!-- Empty -->
+            <template x-if="!loading && !error && files.length === 0">
+              <div class="py-12 text-center text-sm text-slate-500">This folder is empty.</div>
+            </template>
+
+            <!-- File list -->
+            <template x-if="!loading && !error && files.length > 0">
+              <ul class="divide-y divide-slate-100">
+                <template x-for="f in files" :key="f.id">
+                  <li>
+                    <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors duration-150">
+                      <!-- folder vs file -->
+                      <template x-if="f.is_folder">
+                        <button type="button" @click="enterFolder(f)" class="flex items-center gap-3 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">
+                          <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/></svg>
+                          </span>
+                          <span class="text-sm font-medium text-slate-800 truncate" x-text="f.name"></span>
+                        </button>
+                      </template>
+                      <template x-if="!f.is_folder">
+                        <label class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+                          <input type="checkbox" :checked="isSelected(f)" @change="toggleSelect(f)" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"/>
+                          <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                          </span>
+                          <span class="text-sm text-slate-800 truncate" x-text="f.name"></span>
+                        </label>
+                      </template>
+                      <span class="text-xs text-slate-400 flex-shrink-0" x-text="f.is_folder ? 'Folder' : humanSize(f.size)"></span>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <!-- Footer -->
+<div class="flex items-center justify-between px-6 py-4 border-t border-slate-200">
+        <span class="text-sm text-slate-600"><span x-text="selected.length"></span> file(s) selected</span>
+        <div class="flex items-center gap-2">
+          <button type="button" @click="close()" class="btn-secondary h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Cancel</button>
+
+
+          <button type="button" @click="attach()" :disabled="!selected.length || attaching"
+                  class="btn-primary h-11 inline-flex items-center gap-2 disabled:opacity-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            <svg x-show="attaching" class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <span x-text="attaching ? 'Attaching…' : ('Attach ' + selected.length + ' file' + (selected.length === 1 ? '' : 's'))">Attach</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+#}
+
+
+<script>
+  function cloudBrowser(tenderId, connected) {
+
+    return {
+      tenderId: tenderId,
+      connected: connected,
+      open: false,
+      stageId: null,
+      provider: '',
+      files: [],
+      breadcrumbs: [{ id: null, name: 'Home' }],
+      selected: [],
+      loading: false,
+      attaching: false,
+      error: '',
+      firstConnected() {
+        if (this.connected.zoho) return 'zoho';
+        if (this.connected.onedrive) return 'onedrive';
+        return 'zoho';
+      },
+      openModal(stageId) {
+        this.stageId = stageId;
+        this.provider = this.firstConnected();
+        this.breadcrumbs = [{ id: null, name: 'Home' }];
+        this.selected = [];
+        this.error = '';
+        this.files = [];
+        this.open = true;
+        if (this.connected[this.provider]) this.load(null);
+      },
+      close() { this.open = false; },
+      switchProvider(p) {
+        this.provider = p;
+        this.breadcrumbs = [{ id: null, name: 'Home' }];
+        this.selected = [];
+        this.files = [];
+        this.error = '';
+        if (this.connected[p]) this.load(null);
+      },
+      currentFolderId() { return this.breadcrumbs[this.breadcrumbs.length - 1].id; },
+      async load(folderId) {
+        this.loading = true;
+        this.error = '';
+        try {
+          const qs = new URLSearchParams({ provider: this.provider });
+          if (folderId) qs.set('folder_id', folderId);
+          const res = await fetch('/cloud/files?' + qs.toString(), { credentials: 'same-origin' });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            this.error = data.error || 'Failed to load files.';
+            this.files = [];
+          } else {
+            this.files = data.files;
+          }
+        } catch (e) {
+          this.error = 'Network error while loading files.';
+        }
+        this.loading = false;
+      },
+      enterFolder(f) {
+        this.breadcrumbs.push({ id: f.id, name: f.name });
+        this.load(f.id);
+      },
+      breadcrumbTo(idx) {
+        this.breadcrumbs = this.breadcrumbs.slice(0, idx + 1);
+        this.load(this.currentFolderId());
+      },
+      isSelected(f) { return this.selected.some(s => s.id === f.id); },
+      toggleSelect(f) {
+        const i = this.selected.findIndex(s => s.id === f.id);
+        if (i === -1) this.selected.push(f); else this.selected.splice(i, 1);
+      },
+      humanSize(bytes) {
+        if (!bytes) return '—';
+        const u = ['B', 'KB', 'MB', 'GB']; let i = 0; let n = bytes;
+        while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+        return (i === 0 ? n : n.toFixed(1)) + ' ' + u[i];
+      },
+      async attach() {
+        if (!this.selected.length) return;
+        this.attaching = true;
+        try {
+          for (const f of this.selected) {
+            const body = new FormData();
+            body.set('provider', this.provider);
+            body.set('tender_id', this.tenderId);
+            if (this.stageId) body.set('stage_id', this.stageId);
+            body.set('file_id', f.id);
+            body.set('file_name', f.name);
+            if (f.size) body.set('file_size', f.size);
+            if (f.url) body.set('file_url', f.url);
+            if (f.mime_type) body.set('mime_type', f.mime_type);
+            await fetch('/cloud/attach', { method: 'POST', body, credentials: 'same-origin' });
+          }
+          window.location.reload();
+        } catch (e) {
+          this.attaching = false;
+          this.error = 'Failed to attach files.';
+        }
+      },
+      async detach(docId, ev) {
+        if (ev) ev.preventDefault();
+        if (!confirm('Remove this document?')) return;
+        try {
+          await fetch('/cloud/documents/' + docId + '/detach', { method: 'POST', credentials: 'same-origin' });
+          window.location.reload();
+        } catch (e) {}
+      },
+    };
+  }
+</script>
+{% endblock %}

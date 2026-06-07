@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}New Tender — TenderFlow{% endblock %}
+{% block page_title %}New Tender{% endblock %}
+{% block page_subtitle %}Fill in the details below{% endblock %}
+
+{% block header_actions %}
+<a href="/dashboard" class="btn-secondary">← Cancel</a>
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="/tenders/new" class="max-w-4xl space-y-6">
+
+  <!-- ── Basic Info ── -->
+  <div class="card p-6">
+    <h3 class="text-slate-900 font-semibold text-base mb-5 flex items-center gap-2">
+      <span class="w-6 h-6 bg-indigo-100 text-indigo-700 rounded-full text-xs flex items-center justify-center font-bold">1</span>
+      Tender Information
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Reference Number *</label>
+        <input type="text" name="reference_no" required placeholder="e.g. TND-2025-001"
+               class="form-input" style="text-transform:uppercase"/>
+        <p class="text-xs text-slate-400 mt-1">Must be unique across all tenders</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Tender Type</label>
+        <select name="tender_type" class="form-input">
+          {% for tt in TenderType %}
+          <option value="{{ tt.value }}">{{ tt.value.replace('_',' ').title() }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Tender Title *</label>
+        <input type="text" name="title" required
+               placeholder="e.g. Construction of Commercial Tower, Downtown Cairo"
+               class="form-input"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Client / Employer *</label>
+        <input type="text" name="client_name" required placeholder="Client organisation name"
+               class="form-input"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Client Contact</label>
+        <input type="text" name="client_contact" placeholder="Contact name or email"
+               class="form-input"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Priority</label>
+        <select name="priority" class="form-input">
+          {% for p in Priority %}
+          <option value="{{ p.value }}" {% if p.value == 'medium' %}selected{% endif %}>
+            {{ p.value.title() }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Submission Deadline *</label>
+        <input type="datetime-local" name="submission_deadline" required class="form-input"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Internal Review Deadline</label>
+        <input type="datetime-local" name="internal_deadline" class="form-input"/>
+        <p class="text-xs text-slate-400 mt-1">Optional: internal cutoff before client deadline</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Estimated Value</label>
+        <div class="flex gap-2">
+          <select name="currency" class="form-input w-24">
+            {% for c in ['USD','EUR','EGP','SAR','AED','GBP'] %}
+            <option>{{ c }}</option>
+            {% endfor %}
+          </select>
+          <input type="number" name="estimated_value" placeholder="0.00" step="0.01" min="0"
+                 class="form-input flex-1"/>
+        </div>
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
+        <textarea name="description" rows="3" placeholder="Brief scope of works or notes…"
+                  class="form-input resize-none"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stages Setup ── -->
+  <div class="card p-6">
+    <h3 class="text-slate-900 font-semibold text-base mb-2 flex items-center gap-2">
+      <span class="w-6 h-6 bg-indigo-100 text-indigo-700 rounded-full text-xs flex items-center justify-center font-bold">2</span>
+      Configure Proposal Stages
+    </h3>
+    <p class="text-sm text-slate-500 mb-5">
+      All 6 stages are enabled by default. Uncheck any stages that don't apply to this tender — they will be excluded from progress calculations.
+    </p>
+
+    <div class="space-y-3">
+      {% set stage_info = [
+        (1, "📋", "Preliminaries",       "Tender documents review, BOQ check, site visit, etc."),
+        (2, "📦", "Work Packages",       "Sub-contractor enquiries, supplier quotes, work breakdown."),
+        (3, "💰", "Pricing",             "Cost estimation, margin setting, final price build-up."),
+        (4, "🔧", "Technical Proposal",  "Method statements, programme, org chart, CVs, specs."),
+        (5, "🤝", "Commercial Offer",    "Cover letter, forms, bonds, contract conditions."),
+        (6, "🖨️", "Printing & Submitting", "Final compilation, printing, packaging, and delivery."),
+      ] %}
+
+      {% for num, icon, name, hint in stage_info %}
+      <div class="border border-slate-200 rounded-xl p-4 hover:border-indigo-200 transition-colors"
+           x-data="{ enabled: true }">
+        <div class="flex items-start gap-4">
+          <div class="mt-0.5">
+            <input type="checkbox" name="stage_{{ num }}_enabled" id="s{{ num }}"
+                   value="on" checked
+                   x-model="enabled"
+                   class="rounded text-indigo-600 w-4 h-4"/>
+          </div>
+          <div class="flex-1 min-w-0">
+            <label for="s{{ num }}" class="flex items-center gap-2 cursor-pointer mb-1">
+              <span class="text-lg">{{ icon }}</span>
+              <span class="font-semibold text-slate-900">Stage {{ num }}: {{ name }}</span>
+            </label>
+            <p class="text-xs text-slate-500 mb-3">{{ hint }}</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" :class="enabled ? '' : 'opacity-40 pointer-events-none'">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Due Date</label>
+                <input type="datetime-local" name="stage_{{ num }}_due" class="form-input text-sm"
+                       :disabled="!enabled"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Assign to</label>
+                <select name="stage_{{ num }}_assigned" class="form-input text-sm" :disabled="!enabled">
+                  <option value="">— Unassigned —</option>
+                  {% for u in users %}
+                  <option value="{{ u.id }}">{{ u.full_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="text-slate-400 flex-shrink-0 font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+            S{{ num }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── Submit ── -->
+  <div class="flex justify-end gap-3">
+    <a href="/dashboard" class="btn-secondary">Cancel</a>
+    <button type="submit" class="btn-primary px-8">
+      Create Tender →
+    </button>
+  </div>
+
+</form>
+{% endblock %}

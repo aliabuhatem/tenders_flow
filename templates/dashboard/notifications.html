@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Notifications — TenderFlow{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block page_subtitle %}Your recent alerts and updates{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl">
+  {% if notifications %}
+  <div class="space-y-3">
+    {% for n in notifications %}
+    {% set color = {
+      'deadline_warning': 'amber',
+      'stage_complete':   'green',
+      'task_assigned':    'blue',
+      'tender_update':    'indigo',
+      'overdue':          'red',
+      'system':           'slate',
+    }.get(n.type.value, 'slate') %}
+
+    <a href="{{ n.action_url or '#' }}"
+       class="card p-4 flex items-start gap-4 hover:shadow-md transition-shadow block
+              {% if not n.is_read %}border-l-4 border-l-{{ color }}-500{% endif %}">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+                  bg-{{ color }}-100 text-{{ color }}-600 text-lg">
+        {% if n.type.value == 'deadline_warning' %}⏰
+        {% elif n.type.value == 'stage_complete' %}✅
+        {% elif n.type.value == 'task_assigned' %}👤
+        {% elif n.type.value == 'overdue' %}🚨
+        {% else %}🔔{% endif %}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-2">
+          <p class="text-sm font-semibold text-slate-900">{{ n.title }}</p>
+          {% if not n.is_read %}
+          <span class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0 mt-1.5"></span>
+          {% endif %}
+        </div>
+        <p class="text-sm text-slate-600 mt-0.5">{{ n.message }}</p>
+        <p class="text-xs text-slate-400 mt-1.5">{{ n.created_at.strftime("%d %b %Y at %H:%M") }}</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card p-16 text-center">
+    <div class="text-5xl mb-4">🔔</div>
+    <h3 class="text-slate-900 font-semibold text-lg mb-2">All caught up!</h3>
+    <p class="text-slate-500 text-sm">No notifications at the moment.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

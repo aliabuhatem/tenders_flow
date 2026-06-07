@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Create Account — TenderFlow{% endblock %}
+
+{% block auth_content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl mb-4 shadow-xl">
+        <span class="text-white font-bold text-3xl">T</span>
+      </div>
+      <h1 class="text-white text-2xl font-bold">TenderFlow</h1>
+      {% if is_first_user %}
+      <p class="text-indigo-300 text-sm mt-1 font-medium">🎉 Setting up your first admin account</p>
+      {% else %}
+      <p class="text-slate-400 text-sm mt-1">Create your account</p>
+      {% endif %}
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-2xl p-8">
+      <h2 class="text-slate-900 text-xl font-semibold mb-1">
+        {% if is_first_user %}Create Admin Account{% else %}Join TenderFlow{% endif %}
+      </h2>
+      <p class="text-slate-500 text-sm mb-6">
+        {% if is_first_user %}You're the first user — you'll be assigned the Admin role.{% else %}Fill in your details to get started.{% endif %}
+      </p>
+
+      {% if error %}
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-5 flex items-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="POST" action="/auth/signup" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Full name</label>
+          <input type="text" name="full_name" required autocomplete="name"
+                 class="form-input" placeholder="Ahmed Al-Rashidi"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
+          <input type="email" name="email" required autocomplete="email"
+                 class="form-input" placeholder="you@company.com"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">
+            Phone <span class="text-slate-400 font-normal">(optional, for WhatsApp alerts)</span>
+          </label>
+          <input type="tel" name="phone" autocomplete="tel"
+                 class="form-input" placeholder="+20 1xx xxx xxxx"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+          <input type="password" name="password" required autocomplete="new-password"
+                 class="form-input" placeholder="Min. 8 characters" minlength="8"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Confirm password</label>
+          <input type="password" name="confirm_password" required autocomplete="new-password"
+                 class="form-input" placeholder="••••••••"/>
+        </div>
+        <button type="submit" class="w-full btn-primary py-2.5">
+          Create Account →
+        </button>
+      </form>
+
+      <p class="text-center text-sm text-slate-500 mt-6">
+        Already have an account?
+        <a href="/auth/login" class="text-indigo-600 hover:underline font-medium">Sign in</a>
+      </p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
