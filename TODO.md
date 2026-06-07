@@ -1,4 +1,4 @@
-# TenderFlow - Fixes & UI updates
+git add README.md# TenderFlow - Fixes & UI updates
 
 ## Cloud modal close actions bug
 - [ ] Locate cloud modal markup (was commented out in tender_detail.html)

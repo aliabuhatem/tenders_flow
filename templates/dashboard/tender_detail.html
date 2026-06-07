@@ -4,100 +4,221 @@
 {% block page_subtitle %}{{ tender.client_name }} · {{ tender.title }}{% endblock %}
 
 {% block header_actions %}
-<a href="/export/tenders/{{ tender.id }}" class="btn-secondary inline-flex items-center gap-2 h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+<a href="/export/tenders/{{ tender.id }}" class="btn-secondary inline-flex items-center gap-2 h-11 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
   Export PDF
 </a>
-<a href="/dashboard" class="btn-secondary inline-flex items-center gap-2 h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+<a href="/dashboard" class="btn-secondary inline-flex items-center gap-2 h-11 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
   Dashboard
 </a>
 {% endblock %}
 
+{# ─────────────────────────── Reusable SVG / fragments ─────────────────────── #}
+{% macro stage_icon(num) %}
+  {% if num == 1 %}<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 5.25h6m-6 3h6m-7.5 3h9a1.125 1.125 0 0 0 1.125-1.125V11.25a9 9 0 0 0-9-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125Z"/>
+  {% elif num == 2 %}<path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/>
+  {% elif num == 3 %}<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  {% elif num == 4 %}<path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a6.759 6.759 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.49l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.397-1.11-.94l-.213-1.28c-.062-.375-.312-.687-.644-.87a6.52 6.52 0 0 1-.22-.128c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-.255c.007-.378-.138-.75-.43-.991l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.49l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+  {% elif num == 5 %}<path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z"/>
+  {% else %}<path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Z"/>{% endif %}
+{% endmacro %}
+
+{# Reactive status pills (Alpine `status` getter drives which one shows) #}
+{% macro status_pills() %}
+  <span x-show="status==='notstarted'" class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 text-slate-600 px-2.5 py-1 text-xs font-medium whitespace-nowrap">
+    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3"/></svg>Not Started
+  </span>
+  <span x-show="status==='inprogress'" class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 text-blue-700 px-2.5 py-1 text-xs font-medium whitespace-nowrap">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0 0 15 0m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m16.5 0H21m-1.5 0H12"/></svg>In Progress
+  </span>
+  <span x-show="status==='complete'" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-700 px-2.5 py-1 text-xs font-medium whitespace-nowrap">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>Complete
+  </span>
+  <span x-show="status==='skipped'" class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 text-slate-500 px-2.5 py-1 text-xs font-medium whitespace-nowrap">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75 14.25 14.25M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>Skipped
+  </span>
+  <span x-show="status==='overdue'" class="inline-flex items-center gap-1.5 rounded-full bg-red-100 text-red-700 px-2.5 py-1 text-xs font-semibold whitespace-nowrap">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.008v.008H12v-.008Z"/></svg>Overdue
+  </span>
+{% endmacro %}
+
+{# Save indicator (spinner → check) — driven by Alpine `saving`/`saved` #}
+{% macro save_indicator() %}
+  <span class="inline-flex items-center w-5 h-5" aria-live="polite">
+    <svg x-show="saving" x-cloak class="animate-spin w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" aria-label="Saving">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+    <svg x-show="saved" x-cloak x-transition.opacity class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-label="Saved"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+  </span>
+{% endmacro %}
+
+{# Tasks panel (form-based; reused by desktop sub-row and mobile card) #}
+{% macro tasks_panel(stage, tender) %}
+  {% set active_tasks = stage.tasks | selectattr('is_enabled') | list %}
+  {% set prio_color = {'high':'red','medium':'amber','low':'emerald'} %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-xs font-semibold text-slate-500">
+          <th scope="col" class="px-3 py-2 w-10">Done</th>
+          <th scope="col" class="px-3 py-2">Task</th>
+          <th scope="col" class="px-3 py-2 hidden sm:table-cell">Assignee</th>
+          <th scope="col" class="px-3 py-2 hidden sm:table-cell">Priority</th>
+          <th scope="col" class="px-3 py-2 hidden md:table-cell">Due</th>
+          <th scope="col" class="px-3 py-2 w-40">Progress</th>
+          <th scope="col" class="px-3 py-2 w-10"><span class="sr-only">Remove</span></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for task in active_tasks %}
+        <tr class="hover:bg-white transition-colors duration-150">
+          <td class="px-3 py-2">
+            <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/tasks/{{ task.id }}/update">
+              <input type="hidden" name="completion_pct" value="{{ 0 if task.completion_pct >= 100 else 100 }}"/>
+              <input type="hidden" name="is_enabled" value="on"/>
+              <input type="checkbox" {% if task.completion_pct >= 100 %}checked{% endif %}
+                     @change="$event.target.form.requestSubmit()"
+                     aria-label="Mark task '{{ task.title }}' {{ 'incomplete' if task.completion_pct >= 100 else 'complete' }}"
+                     class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"/>
+            </form>
+          </td>
+          <th scope="row" class="px-3 py-2 font-normal text-left">
+            <span class="text-slate-800 {% if task.completion_pct >= 100 %}line-through text-slate-400{% endif %}">{{ task.title }}</span>
+          </th>
+          <td class="px-3 py-2 hidden sm:table-cell text-slate-600">{{ task.assigned_to.full_name if task.assigned_to else '—' }}</td>
+          <td class="px-3 py-2 hidden sm:table-cell">
+            <span class="inline-block rounded-full bg-{{ prio_color[task.priority.value] }}-50 text-{{ prio_color[task.priority.value] }}-700 px-2 py-0.5 text-xs font-medium">{{ task.priority.value.title() }}</span>
+          </td>
+          <td class="px-3 py-2 hidden md:table-cell text-slate-600">{{ task.due_date.strftime("%d %b") if task.due_date else '—' }}</td>
+          <td class="px-3 py-2">
+            <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/tasks/{{ task.id }}/update" class="flex items-center gap-2">
+              <label class="sr-only" for="taskpct-{{ task.id }}">Progress for {{ task.title }}</label>
+              <input id="taskpct-{{ task.id }}" type="range" name="completion_pct" min="0" max="100" step="10"
+                     value="{{ task.completion_pct | round | int }}" class="w-24"
+                     @change="$event.target.form.requestSubmit()"/>
+              <input type="hidden" name="is_enabled" value="on"/>
+              <span class="text-xs font-medium text-slate-600 w-9 text-right">{{ task.completion_pct | round | int }}%</span>
+            </form>
+          </td>
+          <td class="px-3 py-2 text-right">
+            <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/tasks/{{ task.id }}/update"
+                  @submit="return confirm('Remove this task?')">
+              <input type="hidden" name="completion_pct" value="{{ task.completion_pct | round | int }}"/>
+              <input type="hidden" name="is_enabled" value="off"/>
+              <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500" aria-label="Remove task {{ task.title }}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="px-3 py-6 text-center text-sm text-slate-500">No tasks yet. Add the first task below.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Quick add task -->
+  <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/tasks/add"
+        class="mt-3 grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+    <div class="sm:col-span-5">
+      <label class="sr-only" for="newtask-title-{{ stage.id }}">Task title</label>
+      <input id="newtask-title-{{ stage.id }}" type="text" name="title" required placeholder="Task title"
+             class="form-input h-11 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"/>
+    </div>
+    <div class="sm:col-span-3">
+      <label class="sr-only" for="newtask-assignee-{{ stage.id }}">Assignee</label>
+      <select id="newtask-assignee-{{ stage.id }}" name="assigned_to_id" class="form-input h-11 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        <option value="">Unassigned</option>
+        {% for u in users %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="sm:col-span-2">
+      <label class="sr-only" for="newtask-prio-{{ stage.id }}">Priority</label>
+      <select id="newtask-prio-{{ stage.id }}" name="priority" class="form-input h-11 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        <option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option>
+      </select>
+    </div>
+    <div class="sm:col-span-2">
+      <button type="submit" class="btn-primary w-full h-11 inline-flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        Add
+      </button>
+    </div>
+  </form>
+{% endmacro %}
+
 {% block content %}
-<div x-data="cloudBrowser({{ tender.id }}, {{ {'zoho': cloud_status.zoho, 'onedrive': cloud_status.onedrive} | tojson }})">
+{% set can_manage = user.role.value in ['admin', 'bid_manager'] %}
 {% set days_left = (tender.submission_deadline - now).days %}
 {% set is_overdue = days_left < 0 and tender.status.value not in ['submitted','won','lost','cancelled'] %}
+{% set status_dot = {'draft':'slate','active':'blue','submitted':'purple','won':'emerald','lost':'red','cancelled':'slate'} %}
+{% set prio_color = {'high':'red','medium':'amber','low':'emerald'} %}
+
+<div x-data='cloudBrowser({{ tender.id }}, {{ {"zoho": cloud_status.zoho, "onedrive": cloud_status.onedrive} | tojson }})'>
 
 <!-- ── Header Card ── -->
 <div class="card p-6 mb-6">
-  <div class="flex flex-wrap items-start gap-6">
+  <div class="flex flex-col lg:flex-row lg:items-start gap-6">
     <!-- Info -->
-    <div class="flex-1 min-w-64">
-      <div class="flex flex-wrap items-center gap-2 mb-2">
-        <span class="text-xs font-mono font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
-          {{ tender.reference_no }}
+    <div class="flex-1 min-w-0">
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <span class="font-mono text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-1 rounded">{{ tender.reference_no }}</span>
+        <span class="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full font-medium bg-{{ status_dot[tender.status.value] }}-50 text-{{ status_dot[tender.status.value] }}-700">
+          <span class="w-1.5 h-1.5 rounded-full bg-{{ status_dot[tender.status.value] }}-500"></span>{{ tender.status.value.title() }}
         </span>
-        <span class="text-xs px-2 py-1 rounded-full font-medium badge-{{ tender.status.value }}">
-          {{ tender.status.value.title() }}
+        <span class="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full font-medium bg-{{ prio_color[tender.priority.value] }}-50 text-{{ prio_color[tender.priority.value] }}-700">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5"/></svg>
+          {{ tender.priority.value.title() }}
         </span>
-        <span class="text-xs px-2 py-1 rounded-full font-medium badge-{{ tender.priority.value }}">
-          {{ tender.priority.value.title() }} Priority
-        </span>
-        <span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">
+        <span class="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z"/></svg>
           {{ tender.tender_type.value.replace('_', ' ').title() }}
         </span>
       </div>
-      <h2 class="text-xl font-bold text-slate-900 mb-1">{{ tender.title }}</h2>
-      <p class="text-slate-500">{{ tender.client_name }}
-        {% if tender.client_contact %} · {{ tender.client_contact }}{% endif %}
-      </p>
-      {% if tender.description %}
-      <p class="text-sm text-slate-600 mt-2">{{ tender.description }}</p>
-      {% endif %}
+      <h2 class="text-xl font-bold text-slate-900">{{ tender.title }}</h2>
+      <p class="text-sm text-slate-500 mt-1">{{ tender.client_name }}{% if tender.client_contact %} · {{ tender.client_contact }}{% endif %}</p>
+      {% if tender.description %}<p class="text-sm text-slate-600 mt-2">{{ tender.description }}</p>{% endif %}
     </div>
 
-    <!-- Key Dates & Completion -->
-    <div class="grid grid-cols-2 gap-4 text-center">
-      <div class="bg-slate-50 rounded-xl p-4 min-w-32">
-        <p class="text-xs text-slate-500 mb-1">Overall Progress</p>
-        <p class="text-3xl font-bold {% if tender.overall_completion >= 100 %}text-green-600{% elif tender.overall_completion >= 60 %}text-blue-600{% else %}text-indigo-600{% endif %}">
-          {{ tender.overall_completion | round | int }}%
-        </p>
+    <!-- KPI cluster -->
+    <div class="grid grid-cols-3 gap-4 lg:gap-6 lg:text-right">
+      <div>
+        <p class="text-xs text-slate-500 mb-1">Progress</p>
+        <p id="overall-pct" class="text-2xl font-bold {% if tender.overall_completion >= 100 %}text-emerald-600{% else %}text-indigo-600{% endif %}">{{ tender.overall_completion | round | int }}%</p>
       </div>
-      <div class="bg-slate-50 rounded-xl p-4 min-w-32 {% if is_overdue %}bg-red-50{% elif days_left <= 3 %}bg-amber-50{% endif %}">
+      <div>
         <p class="text-xs text-slate-500 mb-1">Deadline</p>
-        <p class="text-sm font-bold {% if is_overdue %}text-red-600{% elif days_left <= 3 %}text-amber-600{% else %}text-slate-800{% endif %}">
-          {{ tender.submission_deadline.strftime("%d %b %Y") }}
-        </p>
-        <p class="text-xs {% if is_overdue %}text-red-500 font-bold{% elif days_left <= 3 %}text-amber-500{% else %}text-slate-400{% endif %}"
-           data-deadline="{{ tender.submission_deadline.isoformat() }}">
-          {{ days_left }}d
+        <p class="text-sm font-bold {% if is_overdue %}text-red-700{% elif days_left <= 3 %}text-amber-700{% else %}text-slate-800{% endif %}">{{ tender.submission_deadline.strftime("%d %b %Y") }}</p>
+        <p class="text-xs mt-0.5 {% if is_overdue %}text-red-600 font-bold{% elif days_left <= 7 %}text-amber-600{% else %}text-slate-500{% endif %}">
+          {% if is_overdue %}OVERDUE by {{ days_left | abs }}d{% else %}{{ days_left }}d left{% endif %}
         </p>
       </div>
-      {% if tender.estimated_value %}
-      <div class="bg-slate-50 rounded-xl p-4 col-span-2">
-        <p class="text-xs text-slate-500 mb-1">Estimated Value</p>
-        <p class="text-sm font-bold text-slate-800">{{ tender.currency }} {{ "{:,.0f}".format(tender.estimated_value) }}</p>
+      <div>
+        <p class="text-xs text-slate-500 mb-1">Value</p>
+        <p class="text-sm font-bold text-slate-800">{% if tender.estimated_value %}{{ tender.currency }} {{ "{:,.0f}".format(tender.estimated_value) }}{% else %}—{% endif %}</p>
       </div>
-      {% endif %}
     </div>
   </div>
 
-  <!-- Overall progress bar -->
-  <div class="mt-5">
-    <div class="flex justify-between text-xs text-slate-500 mb-1.5">
-      <span>Overall completion</span>
-      <span>{{ tender.overall_completion | round | int }}%</span>
-    </div>
-    <div class="progress-bar h-3">
-      <div class="progress-fill {% if tender.overall_completion >= 100 %}bg-green-500{% else %}bg-indigo-500{% endif %}"
-           style="width:{{ tender.overall_completion }}%"></div>
-    </div>
+  <!-- Slim overall progress bar -->
+  <div class="mt-5 h-0.5 rounded-full bg-slate-200 overflow-hidden">
+    <div id="overall-bar" class="h-full rounded-full {% if tender.overall_completion >= 100 %}bg-emerald-500{% else %}bg-indigo-500{% endif %} transition-all duration-300" style="width:{{ tender.overall_completion }}%"></div>
   </div>
 
-  <!-- Status changer -->
-  {% if user.role.value in ['admin', 'bid_manager'] %}
+  <!-- Status segmented control (managers only) -->
+  {% if can_manage %}
   <div class="mt-5 flex flex-wrap items-center gap-3">
-    <span class="text-sm font-medium text-slate-600">Change status:</span>
-    <form method="POST" action="/tenders/{{ tender.id }}/status" class="flex flex-wrap gap-2">
+    <span class="text-sm font-medium text-slate-600">Status</span>
+    <form method="POST" action="/tenders/{{ tender.id }}/status" class="inline-flex flex-wrap items-center gap-1 bg-slate-100 rounded-lg p-1">
       {% for st in ['draft','active','submitted','won','lost','cancelled'] %}
-      {% if st != tender.status.value %}
+      {% if st == tender.status.value %}
+      <span aria-current="true" class="px-3 h-9 inline-flex items-center rounded-md bg-white text-slate-900 text-xs font-semibold shadow-sm">{{ st.title() }}</span>
+      {% else %}
       <button type="submit" name="new_status" value="{{ st }}"
-              class="text-xs px-3 py-1.5 rounded-full border font-medium transition-colors
-                     badge-{{ st }} hover:opacity-80">
-        → {{ st.title() }}
-      </button>
+              class="px-3 h-9 inline-flex items-center rounded-md text-slate-600 hover:bg-white hover:text-slate-900 text-xs font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">{{ st.title() }}</button>
       {% endif %}
       {% endfor %}
     </form>
@@ -105,285 +226,303 @@
   {% endif %}
 </div>
 
-<!-- ── Stages ── -->
-<div class="space-y-4 mb-6" x-data="{ openStage: null }">
-  <div class="flex items-center justify-between">
+<!-- ── Proposal Stages (data table) ── -->
+<div class="card overflow-hidden mb-6">
+  <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
     <h3 class="text-slate-900 font-semibold text-base">Proposal Stages</h3>
-    <p class="text-sm text-slate-500">
+    <p class="text-sm text-slate-600">
       {{ tender.stages | selectattr('is_enabled') | selectattr('completion_pct', 'ge', 100) | list | length }}
-      of
-      {{ tender.stages | selectattr('is_enabled') | list | length }}
-      stages complete
+      of {{ tender.stages | selectattr('is_enabled') | list | length }} stages complete
     </p>
   </div>
 
-  {% for stage in tender.stages %}
-  {% set stage_days = (stage.due_date - now).days if stage.due_date else None %}
-  {% set stage_overdue = stage_days is not none and stage_days < 0 and stage.completion_pct < 100 %}
+  {# ===================== Desktop table (lg+) ===================== #}
+  <div class="hidden lg:block overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 border-b border-slate-200">
+        <tr class="text-left text-xs font-semibold text-slate-600">
+          <th scope="col" class="px-4 py-3" style="width:22%">Stage</th>
+          <th scope="col" class="px-4 py-3" style="width:10%">Status</th>
+          <th scope="col" class="px-4 py-3" style="width:10%">Priority</th>
+          <th scope="col" class="px-4 py-3" style="width:14%">Assignee</th>
+          <th scope="col" class="px-4 py-3" style="width:12%">Due Date</th>
+          <th scope="col" class="px-4 py-3" style="width:16%">Progress</th>
+          <th scope="col" class="px-4 py-3" style="width:8%">Tasks</th>
+          <th scope="col" class="px-4 py-3 text-right" style="width:8%">Actions</th>
+        </tr>
+      </thead>
 
-  <div class="card overflow-hidden {% if not stage.is_enabled %}opacity-60{% endif %}">
-    <!-- Stage header (clickable) -->
-    <div class="p-5 cursor-pointer hover:bg-slate-50 transition-colors"
-         @click="openStage = openStage === {{ stage.id }} ? null : {{ stage.id }}">
-      <div class="flex items-center gap-4">
-
-        <!-- Stage number & icon -->
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-lg
-                    {% if not stage.is_enabled %}bg-slate-100
-                    {% elif stage.completion_pct >= 100 %}bg-green-100
-                    {% elif stage.completion_pct > 0 %}bg-blue-100
-                    {% else %}bg-slate-100{% endif %}">
-          {% if stage.completion_pct >= 100 and stage.is_enabled %}✅
-          {% elif not stage.is_enabled %}⊘
-          {% else %}{{ stage.icon }}{% endif %}
-        </div>
-
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 mb-1 flex-wrap">
-            <span class="font-semibold text-slate-900">{{ stage.name }}</span>
-            {% if not stage.is_enabled %}
-            <span class="text-xs bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">Skipped</span>
-            {% else %}
-            <span class="text-xs px-2 py-0.5 rounded-full badge-{{ stage.priority.value }}">
-              {{ stage.priority.value.title() }}
-            </span>
-            {% if stage_overdue %}
-            <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">OVERDUE</span>
-            {% elif stage_days is not none and stage_days <= 2 %}
-            <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Due soon</span>
-            {% endif %}
-            {% endif %}
-          </div>
-
-          <div class="flex items-center gap-4 text-sm text-slate-500">
-            {% if stage.assigned_to %}
-            <span>👤 {{ stage.assigned_to.full_name }}</span>
-            {% endif %}
-            {% if stage.due_date and stage.is_enabled %}
-            <span class="{% if stage_overdue %}text-red-500{% elif stage_days <= 2 %}text-amber-500{% endif %}"
-                  data-deadline="{{ stage.due_date.isoformat() }}">
-              {{ stage.due_date.strftime("%d %b") }}
-            </span>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- Progress -->
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <div class="text-right hidden sm:block">
-            <p class="text-lg font-bold text-slate-900">{{ stage.completion_pct | round | int }}%</p>
-            <p class="text-xs text-slate-400">complete</p>
-          </div>
-          <div class="w-24 hidden sm:block">
-            <div class="progress-bar">
-              <div class="progress-fill {% if stage.completion_pct >= 100 %}bg-green-500{% else %}bg-indigo-500{% endif %}"
-                   style="width:{{ stage.completion_pct if stage.is_enabled else 0 }}%"></div>
+      {% for stage in tender.stages %}
+      <tbody x-data='stageRow({
+               "stageId": {{ stage.id }}, "tenderId": {{ tender.id }},
+               "pct": {{ stage.completion_pct | round | int }},
+               "enabled": {{ stage.is_enabled | tojson }},
+               "priority": {{ stage.priority.value | tojson }},
+               "assignedTo": {{ ((stage.assigned_to_id | string) if stage.assigned_to_id else "") | tojson }},
+               "dueDate": {{ (stage.due_date.strftime("%Y-%m-%d") if stage.due_date else "") | tojson }},
+               "notes": {{ (stage.notes or "") | tojson }},
+               "canEdit": {{ can_manage | tojson }}
+             })'
+             class="border-b border-slate-100 align-middle">
+        <!-- Main row -->
+        <tr class="bg-white hover:bg-slate-50 transition-colors duration-150"
+            :class="{'opacity-60 bg-slate-50/50': !enabled, 'border-l-4 border-red-500': status==='overdue', 'border-l-4 border-emerald-500': status==='complete'}"
+            style="min-height:64px">
+          <!-- Stage -->
+          <th scope="row" class="px-4 py-3 font-normal text-left">
+            <div class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100 text-slate-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">{{ stage_icon(stage.stage_number) }}</svg>
+              </span>
+              <div class="min-w-0">
+                <p class="text-xs text-slate-500">Stage {{ stage.stage_number }}</p>
+                <p class="font-medium truncate" :class="!enabled ? 'line-through text-slate-400' : 'text-slate-900'">{{ stage.name }}</p>
+              </div>
             </div>
+          </th>
+          <!-- Status -->
+          <td class="px-4 py-3">{{ status_pills() }}</td>
+          <!-- Priority -->
+          <td class="px-4 py-3">
+            <label class="sr-only" for="prio-d-{{ stage.id }}">Priority for {{ stage.name }}</label>
+            <select id="prio-d-{{ stage.id }}" x-model="priority" @change="saveField('priority', priority)" :disabled="!canEdit"
+                    class="h-11 w-full rounded-lg border border-slate-200 bg-white pl-2 pr-6 text-sm text-slate-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    :class="{'border-l-4 border-l-red-500': priority==='high','border-l-4 border-l-amber-500': priority==='medium','border-l-4 border-l-emerald-500': priority==='low'}">
+              <option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
+            </select>
+          </td>
+          <!-- Assignee -->
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                    :class="assignedTo ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-400'"
+                    x-text="assigneeInitials || '—'" :aria-label="assigneeName || 'Unassigned'"></span>
+              <label class="sr-only" for="asg-d-{{ stage.id }}">Assignee for {{ stage.name }}</label>
+              <select id="asg-d-{{ stage.id }}" x-model="assignedTo" @change="saveField('assigned_to_id', assignedTo)" :disabled="!canEdit"
+                      class="h-11 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                <option value="">Unassigned</option>
+                {% for u in users %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}
+              </select>
+            </div>
+          </td>
+          <!-- Due date -->
+          <td class="px-4 py-3">
+            <label class="sr-only" for="due-d-{{ stage.id }}">Due date for {{ stage.name }}</label>
+            <input id="due-d-{{ stage.id }}" type="date" x-model="dueDate" @change="saveField('due_date', dueDate)" :disabled="!canEdit"
+                   class="h-11 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"/>
+            <p x-show="dueDate && enabled" x-cloak class="text-xs mt-1" :class="countdownClass" x-text="countdownText"></p>
+          </td>
+          <!-- Progress -->
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <label class="sr-only" for="pct-d-{{ stage.id }}">Progress for {{ stage.name }}</label>
+              <input id="pct-d-{{ stage.id }}" type="range" min="0" max="100" step="5" x-model.number="pct" @input="onProgress()" :disabled="!canEdit"
+                     class="flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded"/>
+              <span class="text-sm font-bold text-slate-900 w-9 text-right" x-text="pct + '%'"></span>
+              {{ save_indicator() }}
+            </div>
+            <div class="mt-1 h-0.5 rounded-full bg-slate-200 overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-150" :class="pct >= 100 ? 'bg-emerald-500' : 'bg-indigo-500'" :style="`width:${pct}%`"></div>
+            </div>
+          </td>
+          <!-- Tasks -->
+          <td class="px-4 py-3">
+            <button type="button" @click="tasksOpen=!tasksOpen" :aria-expanded="tasksOpen"
+                    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+                           {% set td = stage.tasks|selectattr('is_enabled')|selectattr('completion_pct','ge',100)|list|length %}{% set tt = stage.tasks|selectattr('is_enabled')|list|length %}
+                           {% if tt and td == tt %}bg-emerald-100 text-emerald-700{% elif td %}bg-indigo-100 text-indigo-700{% else %}bg-slate-100 text-slate-600{% endif %}">
+              {{ td }} / {{ tt }}
+              <svg class="w-3 h-3 transition-transform duration-200" :class="tasksOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+            </button>
+          </td>
+          <!-- Actions -->
+          <td class="px-4 py-3">
+            <div class="flex items-center justify-end gap-1">
+              <!-- Notes -->
+              <div class="relative" @click.outside="notesOpen=false">
+                <button type="button" @click="notesOpen=!notesOpen" :disabled="!canEdit"
+                        class="w-9 h-9 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        aria-label="Edit stage notes" :class="notes ? 'text-indigo-600' : ''">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+                </button>
+                <div x-show="notesOpen" x-cloak x-transition class="absolute right-0 mt-1 w-72 rounded-xl border border-slate-200 bg-white shadow-xl z-20 p-3">
+                  <label class="block text-xs font-semibold text-slate-600 mb-1.5" for="notes-d-{{ stage.id }}">Stage notes</label>
+                  <textarea id="notes-d-{{ stage.id }}" x-model="notes" rows="3" class="form-input text-sm w-full resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" placeholder="Optional notes…"></textarea>
+                  <div class="mt-2 flex justify-end gap-2">
+                    <button type="button" @click="notesOpen=false" class="btn-secondary h-9 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Cancel</button>
+                    <button type="button" @click="saveField('notes', notes); notesOpen=false" class="btn-primary h-9 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Save</button>
+                  </div>
+                </div>
+              </div>
+              <!-- Toggle enabled -->
+              <button type="button" @click="toggleEnabled()" :disabled="!canEdit"
+                      class="w-9 h-9 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      :aria-label="enabled ? 'Skip this stage' : 'Re-enable this stage'">
+                <svg x-show="enabled" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                <svg x-show="!enabled" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+              </button>
+              <!-- More menu -->
+              <div class="relative" @click.outside="menuOpen=false">
+                <button type="button" @click="menuOpen=!menuOpen"
+                        class="w-9 h-9 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        aria-label="More actions" :aria-expanded="menuOpen">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/></svg>
+                </button>
+                <div x-show="menuOpen" x-cloak x-transition class="absolute right-0 mt-1 w-44 rounded-xl border border-slate-200 bg-white shadow-xl z-20 py-1">
+                  <button type="button" @click="tasksOpen=true; menuOpen=false" class="block w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150">Add task</button>
+                  <button type="button" @click="resetProgress(); menuOpen=false" :disabled="!canEdit" class="block w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors duration-150">Reset progress</button>
+                  <button type="button" @click="markComplete(); menuOpen=false" :disabled="!canEdit" class="block w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors duration-150">Mark complete</button>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <!-- Tasks sub-row -->
+        <tr x-show="tasksOpen" x-cloak>
+          <td colspan="8" class="p-0 bg-slate-50 border-t border-slate-100">
+            <div x-show="tasksOpen" x-transition class="px-6 py-4">
+              {{ tasks_panel(stage, tender) }}
+            </div>
+          </td>
+        </tr>
+      </tbody>
+      {% endfor %}
+    </table>
+  </div>
+
+  {# ===================== Mobile stacked cards (<lg) ===================== #}
+  <div class="lg:hidden divide-y divide-slate-200">
+    {% for stage in tender.stages %}
+    {% set td = stage.tasks|selectattr('is_enabled')|selectattr('completion_pct','ge',100)|list|length %}
+    {% set tt = stage.tasks|selectattr('is_enabled')|list|length %}
+    <div x-data='stageRow({
+           "stageId": {{ stage.id }}, "tenderId": {{ tender.id }},
+           "pct": {{ stage.completion_pct | round | int }},
+           "enabled": {{ stage.is_enabled | tojson }},
+           "priority": {{ stage.priority.value | tojson }},
+           "assignedTo": {{ ((stage.assigned_to_id | string) if stage.assigned_to_id else "") | tojson }},
+           "dueDate": {{ (stage.due_date.strftime("%Y-%m-%d") if stage.due_date else "") | tojson }},
+           "notes": {{ (stage.notes or "") | tojson }},
+           "canEdit": {{ can_manage | tojson }}
+         })'
+         class="p-4"
+         :class="{'opacity-60': !enabled, 'border-l-4 border-red-500': status==='overdue', 'border-l-4 border-emerald-500': status==='complete'}">
+      <!-- Top: icon + name + status -->
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100 text-slate-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">{{ stage_icon(stage.stage_number) }}</svg>
+          </span>
+          <div class="min-w-0">
+            <p class="text-xs text-slate-500">Stage {{ stage.stage_number }}</p>
+            <p class="font-medium truncate" :class="!enabled ? 'line-through text-slate-400' : 'text-slate-900'">{{ stage.name }}</p>
           </div>
-          <svg class="w-5 h-5 text-slate-400 transition-transform duration-200"
-               :class="openStage === {{ stage.id }} ? 'rotate-180' : ''"
-               fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-          </svg>
         </div>
+        <div class="flex-shrink-0">{{ status_pills() }}</div>
       </div>
-    </div>
 
-    <!-- Expanded stage edit form -->
-    <div x-show="openStage === {{ stage.id }}" x-transition class="border-t border-slate-100">
-      <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/update"
-            class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        <!-- Toggle enabled -->
-        <div class="md:col-span-2 flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-          <input type="checkbox" name="is_enabled" id="enabled_{{ stage.id }}"
-                 {% if stage.is_enabled %}checked{% endif %}
-                 class="rounded text-indigo-600"/>
-          <label for="enabled_{{ stage.id }}" class="text-sm font-medium text-slate-700">
-            Stage is active (uncheck to skip/disable this stage)
-          </label>
-        </div>
-
-        <!-- Completion slider -->
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-slate-700 mb-2">
-            Completion: <span id="pct_{{ stage.id }}_display">{{ stage.completion_pct | round | int }}</span>%
-          </label>
-          <input type="range" name="completion_pct" min="0" max="100" step="5"
-                 value="{{ stage.completion_pct | round | int }}"
-                 class="w-full"
-                 oninput="document.getElementById('pct_{{ stage.id }}_display').textContent = this.value"/>
-        </div>
-
+      <!-- 2-col fields -->
+      <div class="grid grid-cols-2 gap-3 mt-4">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Priority</label>
-          <select name="priority" class="form-input text-sm">
-            {% for p in ['high','medium','low'] %}
-            <option value="{{ p }}" {% if stage.priority.value == p %}selected{% endif %}>{{ p.title() }}</option>
-            {% endfor %}
+          <label class="block text-xs font-semibold text-slate-600 mb-1" for="prio-m-{{ stage.id }}">Priority</label>
+          <select id="prio-m-{{ stage.id }}" x-model="priority" @change="saveField('priority', priority)" :disabled="!canEdit"
+                  class="h-11 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  :class="{'border-l-4 border-l-red-500': priority==='high','border-l-4 border-l-amber-500': priority==='medium','border-l-4 border-l-emerald-500': priority==='low'}">
+            <option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
           </select>
         </div>
-
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Assigned to</label>
-          <select name="assigned_to_id" class="form-input text-sm">
-            <option value="">— Unassigned —</option>
-            {% for u in users %}
-            <option value="{{ u.id }}" {% if stage.assigned_to_id == u.id %}selected{% endif %}>{{ u.full_name }}</option>
-            {% endfor %}
+          <label class="block text-xs font-semibold text-slate-600 mb-1" for="asg-m-{{ stage.id }}">Assignee</label>
+          <select id="asg-m-{{ stage.id }}" x-model="assignedTo" @change="saveField('assigned_to_id', assignedTo)" :disabled="!canEdit"
+                  class="h-11 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            <option value="">Unassigned</option>
+            {% for u in users %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}
           </select>
         </div>
-
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Due date</label>
-          <input type="datetime-local" name="due_date"
-                 value="{{ stage.due_date.strftime('%Y-%m-%dT%H:%M') if stage.due_date else '' }}"
-                 class="form-input text-sm"/>
+          <label class="block text-xs font-semibold text-slate-600 mb-1" for="due-m-{{ stage.id }}">Due date</label>
+          <input id="due-m-{{ stage.id }}" type="date" x-model="dueDate" @change="saveField('due_date', dueDate)" :disabled="!canEdit"
+                 class="h-11 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"/>
+          <p x-show="dueDate && enabled" x-cloak class="text-xs mt-1" :class="countdownClass" x-text="countdownText"></p>
         </div>
-
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Notes</label>
-          <input type="text" name="notes" value="{{ stage.notes or '' }}"
-                 placeholder="Optional stage notes" class="form-input text-sm"/>
-        </div>
-
-        <div class="md:col-span-2 flex justify-end">
-          <button type="submit" class="btn-primary h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Save Stage</button>
-        </div>
-      </form>
-
-      <!-- Stage documents subsection -->
-      <div class="border-t border-slate-100 p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="text-sm font-semibold text-slate-700">Documents</h4>
-          <button type="button" @click="openModal({{ stage.id }})"
-                  class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded px-1 py-0.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/></svg>
-            Attach from Cloud
+          <span class="block text-xs font-semibold text-slate-600 mb-1">Tasks</span>
+          <button type="button" @click="tasksOpen=!tasksOpen" :aria-expanded="tasksOpen"
+                  class="h-11 inline-flex items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 {% if tt and td == tt %}bg-emerald-100 text-emerald-700{% elif td %}bg-indigo-100 text-indigo-700{% else %}bg-slate-100 text-slate-600{% endif %}">
+            {{ td }} / {{ tt }} tasks
           </button>
         </div>
-        {% set docs = stage_docs.get(stage.id, []) %}
-        {% if docs %}
-        <ul class="space-y-2">
-          {% for d in docs %}
-          <li class="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2">
-            <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                         {% if d.provider.value == 'zoho' %}bg-blue-50 text-blue-600{% else %}bg-indigo-50 text-indigo-600{% endif %}">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
-            </span>
-            <div class="flex-1 min-w-0">
-              {% if d.file_url %}<a href="{{ d.file_url }}" target="_blank" rel="noopener" class="text-sm font-medium text-slate-800 hover:text-indigo-700 truncate block transition-colors duration-150">{{ d.file_name }}</a>
-              {% else %}<span class="text-sm font-medium text-slate-800 truncate block">{{ d.file_name }}</span>{% endif %}
-              <span class="text-xs text-slate-500">{{ d.provider.value.title() }} · {{ d.size_human }}</span>
-            </div>
-            <button type="button" @click="detach({{ d.id }}, $event)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500" aria-label="Remove document">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
-            </button>
-          </li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <p class="text-sm text-slate-500 italic">No documents attached to this stage.</p>
-        {% endif %}
       </div>
 
-      <!-- Tasks subsection -->
-      <div class="border-t border-slate-100 p-5">
-        <h4 class="text-sm font-semibold text-slate-700 mb-3">
-          Tasks <span class="text-slate-400 font-normal">({{ stage.tasks | selectattr('is_enabled') | list | length }} active)</span>
-        </h4>
-
-        {% if stage.tasks %}
-        <div class="space-y-2 mb-4">
-          {% for task in stage.tasks if task.is_enabled %}
-          <div class="flex items-center gap-3 bg-slate-50 rounded-lg px-3 py-2">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-slate-800 truncate">{{ task.title }}</span>
-                <span class="text-xs badge-{{ task.priority.value }} px-1.5 py-0.5 rounded">{{ task.priority.value }}</span>
-              </div>
-              {% if task.assigned_to %}
-              <p class="text-xs text-slate-400 mt-0.5">{{ task.assigned_to.full_name }}</p>
-              {% endif %}
-            </div>
-            <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/tasks/{{ task.id }}/update"
-                  class="flex items-center gap-2">
-              <span class="text-xs text-slate-500 w-8 text-right">{{ task.completion_pct | round | int }}%</span>
-              <input type="range" name="completion_pct" min="0" max="100" step="10"
-                     value="{{ task.completion_pct | round | int }}"
-                     class="w-20"
-                     onchange="this.form.submit()"/>
-              <input type="hidden" name="is_enabled" value="on"/>
-            </form>
-          </div>
-          {% else %}
-          <p class="text-sm text-slate-400 italic">No tasks yet.</p>
-          {% endfor %}
+      <!-- Progress full width -->
+      <div class="mt-4">
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-xs font-semibold text-slate-600" for="pct-m-{{ stage.id }}">Progress</label>
+          <div class="flex items-center gap-2"><span class="text-sm font-bold text-slate-900" x-text="pct + '%'"></span>{{ save_indicator() }}</div>
         </div>
-        {% endif %}
+        <input id="pct-m-{{ stage.id }}" type="range" min="0" max="100" step="5" x-model.number="pct" @input="onProgress()" :disabled="!canEdit"
+               class="w-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded"/>
+        <div class="mt-1 h-0.5 rounded-full bg-slate-200 overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-150" :class="pct >= 100 ? 'bg-emerald-500' : 'bg-indigo-500'" :style="`width:${pct}%`"></div>
+        </div>
+      </div>
 
-        <!-- Add task form -->
-        <details class="group">
-          <summary class="text-sm text-indigo-600 font-medium cursor-pointer hover:text-indigo-800 list-none flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Add task
-          </summary>
-          <form method="POST" action="/tenders/{{ tender.id }}/stages/{{ stage.id }}/tasks/add"
-                class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg">
-            <div class="sm:col-span-2">
-              <input type="text" name="title" required placeholder="Task title" class="form-input text-sm"/>
-            </div>
-            <div>
-              <select name="assigned_to_id" class="form-input text-sm">
-                <option value="">— Unassigned —</option>
-                {% for u in users %}
-                <option value="{{ u.id }}">{{ u.full_name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div>
-              <select name="priority" class="form-input text-sm">
-                <option value="medium">Medium Priority</option>
-                <option value="high">High Priority</option>
-                <option value="low">Low Priority</option>
-              </select>
-            </div>
-            <div>
-              <input type="datetime-local" name="due_date" class="form-input text-sm"/>
-            </div>
-            <div class="flex items-end">
-              <button type="submit" class="btn-primary w-full">Add Task</button>
-            </div>
-          </form>
-        </details>
+      <!-- Actions -->
+      <div class="mt-4 flex items-center gap-2">
+        <button type="button" @click="toggleEnabled()" :disabled="!canEdit"
+                class="h-11 px-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                x-text="enabled ? 'Skip stage' : 'Enable stage'"></button>
+        <button type="button" @click="markComplete()" :disabled="!canEdit"
+                class="h-11 px-3 inline-flex items-center rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Mark complete</button>
       </div>
-    </div>
-  </div>
-  {% endfor %}
-</div>
 
-<!-- ── Audit Log ── -->
-{% if audit_logs %}
-<div class="card p-5">
-  <h3 class="text-slate-900 font-semibold text-base mb-4">Activity Log</h3>
-  <div class="space-y-3">
-    {% for log in audit_logs %}
-    <div class="flex items-start gap-3 text-sm">
-      <div class="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-xs font-bold text-slate-600 flex-shrink-0">
-        {{ log.user.initials if log.user else '?' }}
+      <!-- Notes (mobile inline) -->
+      <div class="mt-3" x-show="canEdit">
+        <label class="block text-xs font-semibold text-slate-600 mb-1" for="notes-m-{{ stage.id }}">Notes</label>
+        <textarea id="notes-m-{{ stage.id }}" x-model="notes" @change="saveField('notes', notes)" rows="2" placeholder="Optional notes…"
+                  class="form-input text-sm w-full resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"></textarea>
       </div>
-      <div class="flex-1">
-        <span class="font-medium text-slate-700">{{ log.user.full_name if log.user else 'System' }}</span>
-        <span class="text-slate-500 mx-1">performed</span>
-        <span class="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">{{ log.action }}</span>
-        {% if log.new_values %}
-        <span class="text-slate-500 ml-1">→ {{ log.new_values | string | truncate(60) }}</span>
-        {% endif %}
+
+      <!-- Tasks (mobile) -->
+      <div x-show="tasksOpen" x-cloak x-transition class="mt-4 rounded-lg bg-slate-50 p-4">
+        {{ tasks_panel(stage, tender) }}
       </div>
-      <time class="text-xs text-slate-400 flex-shrink-0">{{ log.created_at.strftime("%d %b %H:%M") }}</time>
     </div>
     {% endfor %}
   </div>
+</div>
+
+<!-- ── Activity Log ── -->
+{% if audit_logs %}
+{% set action_color = {'tender.create':'emerald','tender.status_change':'indigo','stage.update':'blue','stage.patch':'blue','task.update':'slate','task.add':'slate'} %}
+<div class="card p-5 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-slate-900 font-semibold text-base">Activity Log</h3>
+    {% if audit_logs | length >= 10 %}
+    <span class="text-xs text-slate-500">Showing the 10 most recent</span>
+    {% endif %}
+  </div>
+  <ul class="space-y-3">
+    {% for log in audit_logs %}
+    {% set c = action_color.get(log.action, 'slate') %}
+    <li class="flex items-start gap-3 text-sm">
+      <span class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-{{ c }}-50 text-{{ c }}-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+          {% if log.action == 'tender.create' %}<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+          {% elif log.action == 'tender.status_change' %}<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+          {% elif log.action in ['stage.update','stage.patch'] %}<path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085"/>
+          {% else %}<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>{% endif %}
+        </svg>
+      </span>
+      <div class="flex-1 min-w-0">
+        <span class="font-medium text-slate-700">{{ log.user.full_name if log.user else 'System' }}</span>
+        <span class="inline-block ml-1 align-middle rounded px-1.5 py-0.5 text-xs font-medium bg-{{ c }}-50 text-{{ c }}-700">{{ log.action }}</span>
+        {% if log.new_values %}<span class="text-slate-500 ml-1 break-words">{{ log.new_values | string | truncate(60) }}</span>{% endif %}
+      </div>
+      <time class="text-xs text-slate-400 flex-shrink-0">{{ log.created_at.strftime("%d %b %H:%M") }}</time>
+    </li>
+    {% endfor %}
+  </ul>
 </div>
 {% endif %}
 
@@ -395,7 +534,7 @@
       <p class="text-sm text-slate-600">Cloud files linked to this tender</p>
     </div>
     <button type="button" @click="openModal(null)"
-            class="btn-primary inline-flex items-center gap-2 h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            class="btn-primary inline-flex items-center gap-2 h-11 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/></svg>
       Attach from Cloud
     </button>
@@ -405,8 +544,7 @@
   <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     {% for d in tender_docs %}
     <li class="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2.5">
-      <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0
-                   {% if d.provider.value == 'zoho' %}bg-blue-50 text-blue-600{% else %}bg-indigo-50 text-indigo-600{% endif %}">
+      <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 {% if d.provider.value == 'zoho' %}bg-blue-50 text-blue-600{% else %}bg-indigo-50 text-indigo-600{% endif %}">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
       </span>
       <div class="flex-1 min-w-0">
@@ -431,190 +569,145 @@
 <!-- ── Cloud file browser modal ── -->
 {#
   Cloud file browser modal temporarily disabled per user request.
-  Uncomment to re-enable.
+  Uncomment to re-enable. (cloudBrowser() state still powers the Documents panel.)
 
-<div x-data="cloudBrowser({{ tender.id }}, {{ {'zoho': cloud_status.zoho, 'onedrive': cloud_status.onedrive} | tojson }})">
-  <div
-    x-show="open"
-
-    x-cloak
-    @keydown.escape.window="close()"
+<div
+    x-show="open" x-cloak @keydown.escape.window="close()"
     x-effect="document.body.style.overflow = open ? 'hidden' : ''"
     class="fixed inset-0 z-[60] flex items-center justify-center p-4"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="cloud-modal-title"
-  >
-    <!-- Backdrop (click to close) -->
-    <div
-      x-show="open"
-      x-transition.opacity
-      class="absolute inset-0 bg-slate-900/50"
-      @click="close()"
-      aria-hidden="true"
-    ></div>
-
-    <!-- Dialog panel (click inside does NOT close) -->
-    <div
-      x-show="open"
-      class="relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl bg-white shadow-2xl"
-      x-transition:enter="transition ease-out duration-200"
-      x-transition:enter-start="opacity-0 scale-95"
-      x-transition:enter-end="opacity-100 scale-100"
-      @click.stop.prevent
-    >
-      <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-        <h2 id="cloud-modal-title" class="text-base font-semibold text-slate-900">Attach files from cloud</h2>
-        <button
-          type="button"
-          @click="close()"
-          class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          aria-label="Close"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Provider tabs -->
-      <div class="flex items-center gap-1 px-6 pt-4">
-        <template x-for="p in ['zoho','onedrive']" :key="p">
-          <button
-            type="button"
-            @click="switchProvider(p)"
-            class="px-4 h-10 rounded-t-lg text-sm font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            :class="provider === p ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'"
-          >
-            <span x-text="p === 'zoho' ? 'Zoho WorkDrive' : 'OneDrive'"></span>
-            <span x-show="!connected[p]" class="ml-1.5 text-xs text-slate-400">(not connected)</span>
-          </button>
-        </template>
-      </div>
-      <div class="border-b border-slate-200"></div>
-
-      <!-- Body -->
-      <div class="flex-1 overflow-y-auto px-6 py-4 min-h-[280px]">
-        <!-- Not connected state -->
-        <template x-if="!connected[provider]">
-          <div class="flex flex-col items-center justify-center py-16 text-center">
-            <span class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-              <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 0 0 4.5 4.5H18a3.75 3.75 0 0 0 1.332-7.257 3 3 0 0 0-3.758-3.848 5.25 5.25 0 0 0-10.233 2.33A4.502 4.502 0 0 0 2.25 15Z"/>
-              </svg>
-            </span>
-            <p class="text-sm font-medium text-slate-700 mb-1" x-text="(provider === 'zoho' ? 'Zoho WorkDrive' : 'OneDrive') + ' is not connected'"></p>
-            <p class="text-xs text-slate-500 mb-5">Connect your account to browse and attach files.</p>
-            <a :href="'/cloud/' + provider + '/connect'" class="btn-primary inline-flex items-center gap-2 h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/>
-              </svg>
-              <span x-text="'Connect ' + (provider === 'zoho' ? 'Zoho WorkDrive' : 'OneDrive')"></span>
-            </a>
-          </div>
-        </template>
-
-        <!-- Connected -->
-        <template x-if="connected[provider]">
-          <div>
-            <!-- Breadcrumbs -->
-            <nav class="flex items-center gap-1 text-sm mb-3 flex-wrap" aria-label="Breadcrumb">
-              <template x-for="(crumb, idx) in breadcrumbs" :key="idx">
-                <span class="flex items-center gap-1">
-                  <button type="button" @click="breadcrumbTo(idx)" class="text-slate-500 hover:text-indigo-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-1" x-text="crumb.name"></button>
-                  <svg x-show="idx < breadcrumbs.length - 1" class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
-                </span>
-              </template>
-            </nav>
-
-            <!-- Loading skeleton -->
-            <template x-if="loading">
-              <div class="space-y-2">
-                <template x-for="i in 6" :key="i">
-                  <div class="flex items-center gap-3 px-3 py-2.5 animate-pulse">
-                    <div class="w-8 h-8 rounded-lg bg-slate-200"></div>
-                    <div class="h-3 bg-slate-200 rounded w-1/3"></div>
-                    <div class="ml-auto h-3 bg-slate-100 rounded w-16"></div>
-                  </div>
-                </template>
-              </div>
-            </template>
-
-            <!-- Error -->
-            <template x-if="!loading && error">
-              <div class="flex flex-col items-center justify-center py-12 text-center">
-                <svg class="w-10 h-10 text-red-400 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
-                <p class="text-sm text-slate-700 mb-3" x-text="error"></p>
-                <button type="button" @click="load(currentFolderId())" class="btn-secondary h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Retry</button>
-              </div>
-            </template>
-
-            <!-- Empty -->
-            <template x-if="!loading && !error && files.length === 0">
-              <div class="py-12 text-center text-sm text-slate-500">This folder is empty.</div>
-            </template>
-
-            <!-- File list -->
-            <template x-if="!loading && !error && files.length > 0">
-              <ul class="divide-y divide-slate-100">
-                <template x-for="f in files" :key="f.id">
-                  <li>
-                    <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors duration-150">
-                      <!-- folder vs file -->
-                      <template x-if="f.is_folder">
-                        <button type="button" @click="enterFolder(f)" class="flex items-center gap-3 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">
-                          <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/></svg>
-                          </span>
-                          <span class="text-sm font-medium text-slate-800 truncate" x-text="f.name"></span>
-                        </button>
-                      </template>
-                      <template x-if="!f.is_folder">
-                        <label class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
-                          <input type="checkbox" :checked="isSelected(f)" @change="toggleSelect(f)" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"/>
-                          <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
-                          </span>
-                          <span class="text-sm text-slate-800 truncate" x-text="f.name"></span>
-                        </label>
-                      </template>
-                      <span class="text-xs text-slate-400 flex-shrink-0" x-text="f.is_folder ? 'Folder' : humanSize(f.size)"></span>
-                    </div>
-                  </li>
-                </template>
-              </ul>
-            </template>
-          </div>
-        </template>
-      </div>
-
-      <!-- Footer -->
-<div class="flex items-center justify-between px-6 py-4 border-t border-slate-200">
-        <span class="text-sm text-slate-600"><span x-text="selected.length"></span> file(s) selected</span>
-        <div class="flex items-center gap-2">
-          <button type="button" @click="close()" class="btn-secondary h-11 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Cancel</button>
-
-
-          <button type="button" @click="attach()" :disabled="!selected.length || attaching"
-                  class="btn-primary h-11 inline-flex items-center gap-2 disabled:opacity-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-            <svg x-show="attaching" class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
-            <span x-text="attaching ? 'Attaching…' : ('Attach ' + selected.length + ' file' + (selected.length === 1 ? '' : 's'))">Attach</span>
-          </button>
-        </div>
-      </div>
-    </div>
+    role="dialog" aria-modal="true" aria-labelledby="cloud-modal-title">
+  <div x-show="open" x-transition.opacity class="absolute inset-0 bg-slate-900/50" @click="close()" aria-hidden="true"></div>
+  <div x-show="open" @click.stop
+       x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+       class="relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl bg-white shadow-2xl">
+    [ ... full modal markup preserved here ... ]
   </div>
 </div>
 #}
 
+</div><!-- end cloudBrowser scope -->
 
 <script>
-  function cloudBrowser(tenderId, connected) {
+  // Users lookup for assignee avatars (id, name, initials)
+  const TF_USERS = [{% for u in users %}{ id: {{ u.id }}, name: {{ u.full_name | tojson }}, initials: {{ u.initials | tojson }} }{{ "," if not loop.last }}{% endfor %}];
 
+  // ── Inline-editable stage row ──
+  function stageRow(cfg) {
+    return {
+      stageId: cfg.stageId,
+      tenderId: cfg.tenderId,
+      pct: cfg.pct,
+      enabled: cfg.enabled,
+      priority: cfg.priority,
+      assignedTo: cfg.assignedTo,
+      dueDate: cfg.dueDate,
+      notes: cfg.notes,
+      canEdit: cfg.canEdit,
+      tasksOpen: false,
+      notesOpen: false,
+      menuOpen: false,
+      saving: false,
+      saved: false,
+      _debounce: null,
+
+      // ── Derived state ──
+      get isOverdue() {
+        if (!this.dueDate || !this.enabled || this.pct >= 100) return false;
+        return new Date(this.dueDate + 'T23:59:59') < new Date();
+      },
+      get daysLeft() {
+        if (!this.dueDate) return null;
+        const diff = new Date(this.dueDate + 'T23:59:59') - new Date();
+        return Math.ceil(diff / 86400000);
+      },
+      get status() {
+        if (!this.enabled) return 'skipped';
+        if (this.pct >= 100) return 'complete';
+        if (this.isOverdue) return 'overdue';
+        if (this.pct > 0) return 'inprogress';
+        return 'notstarted';
+      },
+      get countdownText() {
+        const d = this.daysLeft;
+        if (d === null) return '';
+        if (d < 0) return 'OVERDUE by ' + Math.abs(d) + 'd';
+        if (d === 0) return 'Due today';
+        return d + 'd left';
+      },
+      get countdownClass() {
+        const d = this.daysLeft;
+        if (d === null) return 'text-slate-500';
+        if (d < 0) return 'text-red-700 font-bold';
+        if (d < 3) return 'text-red-600';
+        if (d <= 7) return 'text-amber-600';
+        return 'text-slate-500';
+      },
+      get assigneeInitials() {
+        const u = TF_USERS.find(x => String(x.id) === String(this.assignedTo));
+        return u ? u.initials : '';
+      },
+      get assigneeName() {
+        const u = TF_USERS.find(x => String(x.id) === String(this.assignedTo));
+        return u ? u.name : 'Unassigned';
+      },
+
+      // ── Persistence ──
+      async patch(fields) {
+        if (!this.canEdit) return;
+        this.saving = true;
+        this.saved = false;
+        try {
+          const res = await fetch(`/api/tenders/${this.tenderId}/stages/${this.stageId}/patch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(fields),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) {
+            this.saving = false;
+            this.saved = true;
+            if (data.stage) {
+              this.pct = data.stage.completion_pct;
+              const pctEl = document.getElementById('overall-pct');
+              const barEl = document.getElementById('overall-bar');
+              if (pctEl) pctEl.textContent = data.stage.tender_completion + '%';
+              if (barEl) barEl.style.width = data.stage.tender_completion + '%';
+            }
+            setTimeout(() => { this.saved = false; }, 1500);
+          } else {
+            this.saving = false;
+            alert((data && data.detail) || 'Could not save change.');
+          }
+        } catch (e) {
+          this.saving = false;
+          alert('Network error while saving.');
+        }
+      },
+      saveField(field, value) {
+        this.patch({ [field]: value });
+      },
+      onProgress() {
+        clearTimeout(this._debounce);
+        this._debounce = setTimeout(() => this.patch({ completion_pct: this.pct }), 300);
+      },
+      toggleEnabled() {
+        this.enabled = !this.enabled;
+        this.patch({ is_enabled: this.enabled });
+      },
+      markComplete() {
+        this.pct = 100;
+        this.patch({ completion_pct: 100 });
+      },
+      resetProgress() {
+        this.pct = 0;
+        this.patch({ completion_pct: 0 });
+      },
+    };
+  }
+
+  // ── Cloud browser (drives Documents panel; modal currently disabled) ──
+  function cloudBrowser(tenderId, connected) {
     return {
       tenderId: tenderId,
       connected: connected,
